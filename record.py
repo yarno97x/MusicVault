@@ -35,4 +35,4 @@ class Record:
         return self.uri
     
     def rate(self, value: float):
-        self.rated = float(value)
+        self.rated = float(value) if value is not None else None
