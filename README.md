@@ -1,5 +1,7 @@
 # 🎶 MusicVault
 
+![Demo](demo.png)
+
 MusicVault is a lightweight album tracking app.  
 It lets you add albums from Spotify, give them ratings, and view your personal music library, all through a clean Streamlit interface.  
 
