@@ -20,49 +20,58 @@ def main():
         layout="wide"
     )
     
-    st.title("🎵 Spotify Music Database")
+    st.title("MusicVault")
     
     # Sidebar navigation
     st.sidebar.title("Navigation")
-    page = st.sidebar.selectbox("Select Page", ["Library", "Wishlist", "Stats"])
+    if "page" not in st.session_state:
+        st.session_state.page = "Stats"
     
-    if page == "Library":
-        library_page()
-    elif page == "Wishlist":
-        wishlist_page()
-    elif page == "Stats":
+    # Buttons for navigation
+    if st.sidebar.button("Stats"):
+        st.session_state.page = "Stats"
+    if st.sidebar.button("Library"):
+        st.session_state.page = "Library"
+    if st.sidebar.button("Wishlist"):
+        st.session_state.page = "Wishlist"
+    
+    # Page routing
+    if st.session_state.page == "Stats":
         stats_page()
+    elif st.session_state.page == "Library":
+        library_page()
+    elif st.session_state.page == "Wishlist":
+        wishlist_page()
 
 def library_page():
     st.header("📚 Library")
     
     # Add new album to library
-    with st.expander("Add Album to Library"):
-        col1, col2 = st.columns([3, 1])
+    col1, col2 = st.columns([3, 1])
 
-        
-        with col1:
-            uri_input = st.text_input("Spotify Album URI", placeholder="spotify:album:...")
-        
-        with col2:
-            rating_input = st.slider("Rating", 
-                            min_value=0.0,
-                            max_value=5.0,
-                            step=0.5,)
-        
-        if st.button("Add to Library"):
-            if uri_input:
-                try:
-                    if "http" in uri_input:
-                        uri_input = "spotify:album:" + uri_input[uri_input.index("album/") + 6:uri_input.index("?")]
-                    record = Record(uri_input, rating_input)
-                    st.session_state.db.add_to_library(record, rating_input)
-                    st.session_state.db.save()
-                    st.success(f"Added '{record.name}' by {record.artist} to library!")
+    
+    with col1:
+        uri_input = st.text_input("Spotify Album URI", placeholder="spotify:album:...")
+    
+    with col2:
+        rating_input = st.slider("Rating", 
+                        min_value=0.0,
+                        max_value=5.0,
+                        step=0.5,)
+    
+    if st.button("Add to Library"):
+        if uri_input:
+            try:
+                if "http" in uri_input:
+                    uri_input = "spotify:album:" + uri_input[uri_input.index("album/") + 6:uri_input.index("?")]
+                record = Record(uri_input, rating_input)
+                st.session_state.db.add_to_library(record, rating_input)
+                st.session_state.db.save()
+                st.success(f"Added '{record.name}' by {record.artist} to library!")
 
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error adding album: {e}")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error adding album: {e}")
     
     # Display library
     if st.session_state.db.library:
@@ -80,12 +89,12 @@ def library_page():
             library_list.sort(key=lambda x: float(x.rated) if x.rated is not None else 0, reverse=True)
         
         # Display albums in grid
-        cols = st.columns(3)
+        cols = st.columns(4)
         for i, record in enumerate(library_list):
-            with cols[i % 3]:
+            with cols[i % 4]:
                 with st.container():
-                    st.image(record.img_url, width=200)
-                    st.write(f"**{record.name}**")
+                    st.image(record.img_url, width=150)
+                    st.write(f"<p style='font-size:14px; margin-bottom: 5px; height: 20px;'><strong>{record.name:35}</strong></p>", unsafe_allow_html=True)
                     st.write(f"{record.artist}")
                     if record.rated:
                         st.write(f"⭐ Rating: {record.rated}/5")
@@ -145,23 +154,21 @@ def wishlist_page():
     st.header("⭐ Wishlist")
     
     # Add new album to wishlist
-    with st.expander("Add Album to Wishlist"):
-            
-        uri_input = st.text_input("Spotify Album URI", placeholder="spotify:album:...")
-        
-        if st.button("Add to Wishlist"):
-            if uri_input:
-                try:
-                    if "http" in uri_input:
-                        uri_input = "spotify:album:" + uri_input[uri_input.index("album/") + 6:uri_input.index("?")]
-                    record = Record(uri_input)
-                    st.session_state.db.add_to_wishlist(record)
-                    st.session_state.db.save()
-                    st.success(f"Added '{record.name}' by {record.artist} to wishlist!")
+    uri_input = st.text_input("Spotify Album URI", placeholder="spotify:album:...")
+    
+    if st.button("Add to Wishlist"):
+        if uri_input:
+            try:
+                if "http" in uri_input:
+                    uri_input = "spotify:album:" + uri_input[uri_input.index("album/") + 6:uri_input.index("?")]
+                record = Record(uri_input)
+                st.session_state.db.add_to_wishlist(record)
+                st.session_state.db.save()
+                st.success(f"Added '{record.name}' by {record.artist} to wishlist!")
 
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error adding album: {e}")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error adding album: {e}")
     
     # Display wishlist
     if st.session_state.db.wishlist:
@@ -171,17 +178,17 @@ def wishlist_page():
         wishlist_list.sort(key=lambda x: x.artist)
         
         # Display albums in grid
-        cols = st.columns(3)
+        cols = st.columns(4)
         for i, record in enumerate(wishlist_list):
-            with cols[i % 3]:
+            with cols[i % 4]:
                 with st.container():
-                    st.image(record.img_url, width=200)
-                    st.write(f"**{record.name}**")
+                    st.image(record.img_url, width=150)
+                    st.write(f"<p style='font-size:14px; margin-bottom: 20px; height: 20px;'><strong>{record.name:35}</strong></p>", unsafe_allow_html=True)
                     st.write(f"{record.artist}")
                     
                     col1, col2 = st.columns(2)
                     with col1:
-                        if st.button(f"Move to Library", key=f"move_{record.uri}"):
+                        if st.button(f"Log", key=f"move_{record.uri}"):
                             st.session_state[f'move_modal_{record.uri}'] = True
                     
                     with col2:
